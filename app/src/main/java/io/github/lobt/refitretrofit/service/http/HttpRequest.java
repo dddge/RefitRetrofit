@@ -1,6 +1,13 @@
 package io.github.lobt.refitretrofit.service.http;
 
+import android.util.Log;
+
 import io.github.lobt.refitretrofit.service.http.api.GithubService;
+import io.github.lobt.refitretrofit.service.http.api.TngouApiService;
+import io.github.lobt.refitretrofit.service.http.model.HttpModel;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -11,23 +18,62 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class HttpRequest {
 
-    private static final String BASE_URL = "https://api.github.com/";
-
-    private static volatile  GithubService githubService;
-
-    private static  Retrofit retrofit = new Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build();
+    private static volatile GithubService githubService;
+    private static volatile TngouApiService tgApiService;
 
     public static GithubService getGithubApi() {
-        if(githubService == null) {
+        if (githubService == null) {
             synchronized (HttpRequest.class) {
+                Retrofit retrofit = new Retrofit.Builder()
+                        .baseUrl("https://api.github.com/")
+                        .addConverterFactory(GsonConverterFactory.create())
+                        .build();
                 githubService = retrofit.create(GithubService.class);
             }
         }
         return githubService;
     }
 
-    private HttpRequest(){}
+    public static TngouApiService getTngouApi() {
+        if (tgApiService == null) {
+            synchronized (HttpRequest.class) {
+                if (tgApiService == null) {
+                    Retrofit retrofit = new Retrofit.Builder()
+                            .baseUrl("http://www.tngou.net/api/")
+                            .addConverterFactory(GsonConverterFactory.create())
+                            .build();
+                    tgApiService = retrofit.create(TngouApiService.class);
+                }
+            }
+        }
+        return tgApiService;
+    }
+
+    public static <T> void enqueue(Call<HttpModel<T>> call, final AbsRequestCallback callback) {
+        call.enqueue(new Callback<HttpModel<T>>() {
+            @Override
+            public void onResponse(Call<HttpModel<T>> call, Response<HttpModel<T>> response) {
+                if (response.isSuccessful()) {
+                    if (callback != null) {
+                        HttpModel<T> result = response.body();
+                        if (result.status) {
+                            callback.onSuccess(result.tngou);
+                        } else {
+                            callback.onFailure(-1, "data is not valid.");
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<HttpModel<T>> call, Throwable t) {
+                if (callback != null) {
+                    callback.onFailure(-1, Log.getStackTraceString(t));
+                }
+            }
+        });
+    }
+
+    private HttpRequest() {
+    }
 }

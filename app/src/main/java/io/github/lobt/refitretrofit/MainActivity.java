@@ -7,8 +7,10 @@ import android.view.View;
 
 import java.util.List;
 
+import io.github.lobt.refitretrofit.service.http.AbsRequestCallback;
 import io.github.lobt.refitretrofit.service.http.HttpRequest;
 import io.github.lobt.refitretrofit.service.http.model.Contributor;
+import io.github.lobt.refitretrofit.service.http.model.HotNews;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -24,7 +26,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void fetchData(View view) {
+        switch (view.getId()) {
+            case R.id.btn_contributors:
+                printContributos();
+                break;
+            case R.id.btn_hotnews:
+                printHotNews();
+                break;
+        }
+    }
 
+    private void printContributos() {
         Call<List<Contributor>> call = HttpRequest.getGithubApi().contributors("square", "retrofit");
 
         call.enqueue(new Callback<List<Contributor>>() {
@@ -46,6 +58,17 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, Log.getStackTraceString(t));
             }
         });
+    }
 
+    private void printHotNews() {
+        HttpRequest.enqueue(HttpRequest.getTngouApi().hotNews("10"), new AbsRequestCallback<List<HotNews>>() {
+            @Override
+            public void onSuccess(List<HotNews> data) {
+                if (data == null || data.size() == 0) return;
+                for (HotNews news : data) {
+                    Log.d(TAG, news.title + " (" + news.fromname + ")");
+                }
+            }
+        });
     }
 }
