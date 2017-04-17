@@ -28,15 +28,19 @@ public class MainActivity extends AppCompatActivity {
     public void fetchData(View view) {
         switch (view.getId()) {
             case R.id.btn_contributors:
-                printContributos();
+                printContributors();
                 break;
             case R.id.btn_hotnews:
                 printHotNews();
                 break;
+            case R.id.btn_jinyifanyi:
+                printJinyiFanyi();
+                break;
         }
     }
 
-    private void printContributos() {
+    private void printContributors() {
+
         Call<List<Contributor>> call = HttpRequest.getGithubApi().contributors("square", "retrofit");
 
         call.enqueue(new Callback<List<Contributor>>() {
@@ -67,6 +71,19 @@ public class MainActivity extends AppCompatActivity {
                 if (data == null || data.size() == 0) return;
                 for (HotNews news : data) {
                     Log.d(TAG, news.title + " (" + news.fromname + ")");
+                }
+            }
+        });
+    }
+
+    private void printJinyiFanyi() {
+        final String queryWord = "好像";
+        HttpRequest.enqueue(HttpRequest.getJyfyService().jyfyWord(queryWord), new AbsRequestCallback<List<String>>() {
+            @Override
+            public void onSuccess(List<String> data) {
+                if (data == null || data.size() == 0) return;
+                for (String jin : data) {
+                    Log.d(TAG, jin + " (" + queryWord + ")");
                 }
             }
         });
