@@ -3,10 +3,12 @@ package io.github.lobt.refitretrofit.service.http;
 import android.util.Log;
 
 import io.github.lobt.refitretrofit.service.http.api.GithubService;
-import io.github.lobt.refitretrofit.service.http.api.JinyiFanyiService;
 import io.github.lobt.refitretrofit.service.http.api.TngouApiService;
-import io.github.lobt.refitretrofit.service.http.converter.gson.GsonConverterFactory;
+import io.github.lobt.refitretrofit.service.http.api.WeatherService;
+import io.github.lobt.refitretrofit.service.http.converter.fastjson.FastjsonConverterFactory;
 import io.github.lobt.refitretrofit.service.http.model.HttpModel;
+import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -21,16 +23,12 @@ public class HttpRequest {
 
     private static volatile GithubService githubService;
     private static volatile TngouApiService tgApiService;
-    private static volatile JinyiFanyiService jyfyService;
+    private static volatile WeatherService weatherService;
 
     public static GithubService getGithubApi() {
         if (githubService == null) {
             synchronized (HttpRequest.class) {
-                Retrofit retrofit = new Retrofit.Builder()
-                        .baseUrl("https://api.github.com/")
-                        .addConverterFactory(GsonConverterFactory.create())
-                        .build();
-                githubService = retrofit.create(GithubService.class);
+                githubService = createApiService("https://api.github.com/", GithubService.class);
             }
         }
         return githubService;
@@ -40,31 +38,24 @@ public class HttpRequest {
         if (tgApiService == null) {
             synchronized (HttpRequest.class) {
                 if (tgApiService == null) {
-                    Retrofit retrofit = new Retrofit.Builder()
-                            .baseUrl("http://www.tngou.net/api/")
-                            .addConverterFactory(GsonConverterFactory.create())
-                            .build();
-                    tgApiService = retrofit.create(TngouApiService.class);
+                    tgApiService = createApiService("http://www.tngou.net/api/", TngouApiService.class);
                 }
             }
         }
         return tgApiService;
     }
 
-    public static JinyiFanyiService getJyfyService() {
-        if (jyfyService == null) {
+    public static WeatherService getWeatherApi() {
+        if (weatherService == null) {
             synchronized (HttpRequest.class) {
-                if (jyfyService == null) {
-                    Retrofit retrofit = new Retrofit.Builder()
-                            .baseUrl("http://apis.baidu.com/netpopo/")
-                            .addConverterFactory(GsonConverterFactory.create())
-                            .build();
-                    jyfyService = retrofit.create(JinyiFanyiService.class);
+                if (weatherService == null) {
+                    weatherService = createApiService("http://rap.taobao.org/mockjsdata/17471/refitretrofit/", WeatherService.class);
                 }
             }
         }
-        return jyfyService;
+        return weatherService;
     }
+
 
     public static <T> void enqueue(Call<HttpModel<T>> call, final AbsRequestCallback callback) {
         call.enqueue(new Callback<HttpModel<T>>() {
@@ -72,19 +63,11 @@ public class HttpRequest {
             public void onResponse(Call<HttpModel<T>> call, Response<HttpModel<T>> response) {
                 if (response.isSuccessful()) {
                     if (callback != null) {
-                        // 天狗API返回数据的处理
-//                        HttpModel<T> result = response.body();
-//                        if (result.status) {
-//                            callback.onSuccess(result.tngou);
-//                        } else {
-//                            callback.onFailure(-1, "data is not valid.");
-//                        }
-                        // 近义词反义词API返回数据的处理
                         HttpModel<T> result = response.body();
-                        if (result.status == ResponseCodeConstant.RESPONSE_SUCCESS) {
-                            callback.onSuccess(result.result);
+                        if (result.code == ResponseCodeConstant.RESPONSE_SUCCESS) {
+                            callback.onSuccess(result.data);
                         } else {
-                            callback.onFailure(result.status, result.msg);
+                            callback.onFailure(result.code, result.message);
                         }
                     }
                 }
@@ -97,6 +80,25 @@ public class HttpRequest {
                 }
             }
         });
+    }
+
+    private static <T> T createApiService(String baseUrl, Class<T> service) {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(baseUrl)
+                .client(buildHttpClient())
+                .addConverterFactory(FastjsonConverterFactory.create())
+                .build();
+        return retrofit.create(service);
+    }
+
+    private static OkHttpClient buildHttpClient() {
+        OkHttpClient.Builder builder = new OkHttpClient.Builder();
+
+        HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
+        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+        builder.addInterceptor(new RequestInterceptor())
+                .addInterceptor(loggingInterceptor);
+        return builder.build();
     }
 
     private HttpRequest() {

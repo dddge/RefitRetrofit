@@ -48,12 +48,12 @@ final class GsonResponseBodyConverter<T> implements Converter<ResponseBody, T> {
 
         if (queryKey != null) {
             HttpModel<LinkedTreeMap> httpModel = gson.fromJson(value.string(), HttpModel.class);
-            LinkedTreeMap map = httpModel.result;
+            LinkedTreeMap map = httpModel.data;
 
             HttpModel result = new HttpModel();
-            result.status = httpModel.status;
-            result.msg = httpModel.msg;
-            result.result = map.get(queryKey);
+            result.code = httpModel.code;
+            result.message = httpModel.message;
+            result.data = map.get(queryKey);
 
             value = ResponseBody.create(value.contentType(), gson.toJson(result));
         }

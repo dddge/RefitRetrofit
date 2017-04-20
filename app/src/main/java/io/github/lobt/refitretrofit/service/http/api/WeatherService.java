@@ -4,20 +4,18 @@ import java.util.List;
 
 import io.github.lobt.refitretrofit.service.http.converter.QueryKey;
 import io.github.lobt.refitretrofit.service.http.model.HttpModel;
+import io.github.lobt.refitretrofit.service.http.model.WeatherModel;
 import retrofit2.Call;
 import retrofit2.http.GET;
-import retrofit2.http.Query;
 
 /**
  * @author Lobt
  * @version 0.1
  */
 
-public interface JinyiFanyiService {
+public interface WeatherService {
 
-//    @Headers("apikey: 69c54795fd9d132d998fd5dd4a16ec04")
-    @QueryKey("jin")
-    @GET("jinyifanyi/word")
-    Call<HttpModel<List<String>>> jyfyWord(@Query("word") String word);
+    @QueryKey("forecast")
+    @GET("weather")
+    Call<HttpModel<List<WeatherModel>>> todayWeather();
 }
-

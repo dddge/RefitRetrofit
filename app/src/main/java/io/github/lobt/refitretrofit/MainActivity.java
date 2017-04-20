@@ -11,6 +11,7 @@ import io.github.lobt.refitretrofit.service.http.AbsRequestCallback;
 import io.github.lobt.refitretrofit.service.http.HttpRequest;
 import io.github.lobt.refitretrofit.service.http.model.Contributor;
 import io.github.lobt.refitretrofit.service.http.model.HotNews;
+import io.github.lobt.refitretrofit.service.http.model.WeatherModel;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -33,8 +34,8 @@ public class MainActivity extends AppCompatActivity {
             case R.id.btn_hotnews:
                 printHotNews();
                 break;
-            case R.id.btn_jinyifanyi:
-                printJinyiFanyi();
+            case R.id.btn_today_weather:
+                printTodayWeather();
                 break;
         }
     }
@@ -76,14 +77,17 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void printJinyiFanyi() {
-        final String queryWord = "好像";
-        HttpRequest.enqueue(HttpRequest.getJyfyService().jyfyWord(queryWord), new AbsRequestCallback<List<String>>() {
+    private void printTodayWeather() {
+        HttpRequest.enqueue(HttpRequest.getWeatherApi().todayWeather(), new AbsRequestCallback<List<WeatherModel>>() {
             @Override
-            public void onSuccess(List<String> data) {
+            public void onSuccess(List<WeatherModel> data) {
                 if (data == null || data.size() == 0) return;
-                for (String jin : data) {
-                    Log.d(TAG, jin + " (" + queryWord + ")");
+
+                for(WeatherModel w : data) {
+                    StringBuilder strBuilder = new StringBuilder("当日天气情况如下： \n");
+                    strBuilder.append("当日温度（ ").append(w.minTmp).append(", ").append(w.maxTmp).append(" )\n");
+                    strBuilder.append("当日天气： 白天").append(w.dayInfo).append(", 夜晚").append(w.nightInfo);
+                    Log.d(TAG, strBuilder.toString());
                 }
             }
         });
