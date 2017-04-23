@@ -5,8 +5,13 @@ import android.util.Log;
 import io.github.lobt.refitretrofit.service.http.api.GithubService;
 import io.github.lobt.refitretrofit.service.http.api.TngouApiService;
 import io.github.lobt.refitretrofit.service.http.api.WeatherService;
+import io.github.lobt.refitretrofit.service.http.api.mock.MockService;
+import io.github.lobt.refitretrofit.service.http.api.mock.MockWeatherService;
 import io.github.lobt.refitretrofit.service.http.converter.fastjson.FastjsonConverterFactory;
 import io.github.lobt.refitretrofit.service.http.model.HttpModel;
+import io.github.lobt.refitretrofit.service.mock.BehaviorDelegate;
+import io.github.lobt.refitretrofit.service.mock.MockRetrofit;
+import io.github.lobt.refitretrofit.service.mock.NetworkBehavior;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
@@ -49,7 +54,7 @@ public class HttpRequest {
         if (weatherService == null) {
             synchronized (HttpRequest.class) {
                 if (weatherService == null) {
-                    weatherService = createApiService("http://rap.taobao.org/mockjsdata/17471/refitretrofit/", WeatherService.class);
+                    weatherService = createApiService("http://rap.taobao.org/mockjsdata/17471/refitretrofit/", MockWeatherService.class, WeatherService.class);
                 }
             }
         }
@@ -89,6 +94,33 @@ public class HttpRequest {
                 .addConverterFactory(FastjsonConverterFactory.create())
                 .build();
         return retrofit.create(service);
+    }
+
+    private static <T extends MockService<R>, R> T createApiService(String baseUrl, Class<T> mockService, Class<R> realService) {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(baseUrl)
+                .client(buildHttpClient())
+                .addConverterFactory(FastjsonConverterFactory.create())
+                .build();
+
+        NetworkBehavior networkBehavior = NetworkBehavior.create();
+        MockRetrofit mockRetrofit = new MockRetrofit.Builder(retrofit)
+                .networkBehavior(networkBehavior)
+                .build();
+
+        BehaviorDelegate<R> delegate = mockRetrofit.create(realService);
+
+        T mockObject = null;
+        try {
+            mockObject = mockService.newInstance();
+            mockObject.setDelegate(delegate);
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+
+        return mockObject;
     }
 
     private static OkHttpClient buildHttpClient() {

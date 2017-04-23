@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
             public void onSuccess(List<WeatherModel> data) {
                 if (data == null || data.size() == 0) return;
 
-                for(WeatherModel w : data) {
+                for (WeatherModel w : data) {
                     StringBuilder strBuilder = new StringBuilder("当日天气情况如下： \n");
                     strBuilder.append("当日温度（ ").append(w.minTmp).append(", ").append(w.maxTmp).append(" )\n");
                     strBuilder.append("当日天气： 白天").append(w.dayInfo).append(", 夜晚").append(w.nightInfo);
