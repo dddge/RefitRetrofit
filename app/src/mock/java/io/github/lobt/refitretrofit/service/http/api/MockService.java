@@ -1,4 +1,4 @@
-package io.github.lobt.refitretrofit.service.http.api.mock;
+package io.github.lobt.refitretrofit.service.http.api;
 
 import io.github.lobt.refitretrofit.service.mock.BehaviorDelegate;
 

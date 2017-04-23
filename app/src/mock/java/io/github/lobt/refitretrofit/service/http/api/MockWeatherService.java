@@ -1,9 +1,8 @@
-package io.github.lobt.refitretrofit.service.http.api.mock;
+package io.github.lobt.refitretrofit.service.http.api;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import io.github.lobt.refitretrofit.service.http.api.WeatherService;
 import io.github.lobt.refitretrofit.service.http.model.HttpModel;
 import io.github.lobt.refitretrofit.service.http.model.WeatherModel;
 import retrofit2.Call;
@@ -16,7 +15,7 @@ import retrofit2.Call;
 public class MockWeatherService extends MockService<WeatherService> implements WeatherService {
     @Override
     public Call<HttpModel<List<WeatherModel>>> todayWeather() {
-       HttpModel<List<WeatherModel>> result = new HttpModel<>();
+        HttpModel<List<WeatherModel>> result = new HttpModel<>();
         result.code = 0;
         result.message = "OK";
 
